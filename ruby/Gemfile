@@ -1,0 +1,11 @@
+source "https://rubygems.org"
+
+Dir.chdir(File.dirname(__FILE__)) do
+  File.open('.ruby-version', "rb") do |file|
+    ruby file.read.strip
+  end
+end
+
+gem 'github_api'
+gem 'highline'
+gem 'ruby-progressbar'
