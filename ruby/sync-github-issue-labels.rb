@@ -5,7 +5,7 @@ require 'ruby-progressbar'
 
 username = ask('Username act as: ')
 password = ask('Password to use (This only exists in memory and is not stored): ') { |q| q.echo = '*' }
-org = ask('Organization to work on: ') { |q| q.default = 'wildland' }
+org = ask('Organization/User to work on: ') { |q| q.default = 'wildland' }
 source_repo = ask('Model repo with correct labels: ') { |q| q.default = 'guides' }
 verbose = false
 verbose = agree("Verbose progress for all repos?")

@@ -6,7 +6,7 @@ require 'launchy'
 
 username = ask('Username act as: ')
 password = ask('Password to use (This only exists in memory and is not stored): ') { |q| q.echo = '*' }
-org = ask('Organization to work on: ') { |q| q.default = 'wildland' }
+org = ask('Organization/User to work on: ') { |q| q.default = 'wildland' }
 
 total_progressbar = ProgressBar.create(
   format: 'Total %E |%bᗧ%i| %p%% %t | Processed: %c repos out of %C',
