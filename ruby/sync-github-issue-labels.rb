@@ -8,11 +8,9 @@ password = ask('Password to use (This only exists in memory and is not stored): 
 org = ask('Organization to work on: ') { |q| q.default = 'wildland' }
 source_repo = ask('Model repo with correct labels: ') { |q| q.default = 'guides' }
 verbose = false
-choose do |menu|
-  menu.prompt = "Verbose repo progress?"
-  menu.choice(:yes) { verbose = true }
-  menu.choices(:no) { verbose = false }
-end
+verbose = agree("Verbose progress for all repos?")
+auto_create = agree("Automatically create labels?")
+auto_remove = agree("Automatically remove labels?")
 
 total_progressbar = ProgressBar.create(
   format: 'Total %E |%bᗧ%i| %p%% %t | Processed: %c repos out of %C',
@@ -55,12 +53,14 @@ repo_names.each do |repo_name|
   labels_to_add.each do |new_label_name|
     repo_bar.increment if verbose
     begin
-      github.issues.labels.create(
-        user: org,
-        repo: repo_name,
-        name: new_label_name,
-        color: known_labels[new_label_name]
-      )
+      if auto_create || agree("Add #{new_label_name} to #{repo_name}?")
+        github.issues.labels.create(
+          user: org,
+          repo: repo_name,
+          name: new_label_name,
+          color: known_labels[new_label_name]
+        )
+      end
     rescue Exception => e
       puts e.to_s if verbose
       repos_with_errors[repo_name] = [] unless repos_with_errors.has_key?(repo_name)
@@ -71,11 +71,13 @@ repo_names.each do |repo_name|
   labels_to_remove.each do |old_label_name|
     repo_bar.increment if verbose
     begin
-      github.issues.labels.delete(
-        user: org,
-        repo: repo_name,
-        label_name: URI.escape(old_label_name)
-      )
+      if auto_remove || agree("Remove #{old_label_name} from #{repo_name}?")
+        github.issues.labels.delete(
+          user: org,
+          repo: repo_name,
+          label_name: URI.escape(old_label_name)
+        )
+      end
     rescue Exception => e
       puts e.to_s if verbose
       repos_with_errors[repo_name] = [] unless repos_with_errors.has_key?(repo_name)
