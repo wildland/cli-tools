@@ -6,7 +6,14 @@ require 'launchy'
 
 username = ask('Username act as: ')
 password = ask('Password to use (This only exists in memory and is not stored): ') { |q| q.echo = '*' }
-org = ask('Organization/User to work on: ') { |q| q.default = 'wildland' }
+github_user = nil
+org = nil
+choose do |menu|
+  menu.prompt = "Act on an organization or user?"
+  menu.choice(:user) { github_user = ask('Username: ') { |q| q.default = username } }
+  menu.choices(:organization) { org = ask('Organization: ') { |q| q.default = 'wildland' } }
+end
+org_or_github_user = github_user.nil? ? org : github_user
 
 total_progressbar = ProgressBar.create(
   format: 'Total %E |%bᗧ%i| %p%% %t | Processed: %c repos out of %C',
@@ -16,8 +23,11 @@ total_progressbar = ProgressBar.create(
 )
 
 github = Github.new(login: username, password: password)
-
-repo_names = github.repos.list(org: org).map(&:name)
+if github_user.nil?
+  repo_names = github.repos.list(org: org).map(&:name)
+else
+  repo_names = github.repos.list(user: github_user).map(&:name)
+end
 repos_with_pull_requests = Hash.new
 
 total_progressbar.total = repo_names.count
@@ -26,7 +36,7 @@ open_pull_request_count = 0
 open_pull_request_repo_count = 0
 
 repo_names.each do |repo_name|
-  current_pull_requests = github.pull_requests.list(user: org, repo: repo_name)
+    current_pull_requests = github.pull_requests.list(user: org_or_github_user, repo: repo_name)
 
   total_progressbar.increment
 

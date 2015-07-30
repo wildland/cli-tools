@@ -5,7 +5,15 @@ require 'ruby-progressbar'
 
 username = ask('Username act as: ')
 password = ask('Password to use (This only exists in memory and is not stored): ') { |q| q.echo = '*' }
-org = ask('Organization/User to work on: ') { |q| q.default = 'wildland' }
+github_user = nil
+org = nil
+choose do |menu|
+  menu.prompt = "Act on an organization or user?"
+  menu.choice(:user) { github_user = ask('Username: ') { |q| q.default = username } }
+  menu.choices(:organization) { org = ask('Organization: ') { |q| q.default = 'wildland' } }
+end
+org_or_github_user = github_user.nil? ? org : github_user
+
 source_repo = ask('Model repo with correct labels: ') { |q| q.default = 'guides' }
 verbose = false
 verbose = agree("Verbose progress for all repos?")
@@ -20,17 +28,23 @@ total_progressbar = ProgressBar.create(
 )
 
 github = Github.new(login: username, password: password)
-known_labels = github.issues.labels.list(user: org, repo: source_repo).map{|label| [label.name, label.color]}.to_h
+
+known_labels = github.issues.labels.list(user: org_or_github_user, repo: source_repo).map{|label| [label.name, label.color]}.to_h
 known_label_names = known_labels.keys.sort
 
-repo_names = github.repos.list(org: org).map(&:name)
+if github_user.nil?
+  repo_names = github.repos.list(org: org).map(&:name)
+else
+  repo_names = github.repos.list(user: github_user).map(&:name)
+end
+
 repos_with_errors = Hash.new
 
 total_progressbar.total = repo_names.count
 
 repo_names.each do |repo_name|
   next if repo_name == source_repo
-  current_label_names = github.issues.labels.list(user: org, repo: repo_name).map(&:name).sort
+  current_label_names = github.issues.labels.list(user: org_or_github_user, repo: repo_name).map(&:name).sort
 
   if verbose
     repo_bar = ProgressBar.create(
@@ -55,7 +69,7 @@ repo_names.each do |repo_name|
     begin
       if auto_create || agree("Add #{new_label_name} to #{repo_name}?")
         github.issues.labels.create(
-          user: org,
+          user: org_or_github_user,
           repo: repo_name,
           name: new_label_name,
           color: known_labels[new_label_name]
@@ -73,7 +87,7 @@ repo_names.each do |repo_name|
     begin
       if auto_remove || agree("Remove #{old_label_name} from #{repo_name}?")
         github.issues.labels.delete(
-          user: org,
+          user: org_or_github_user,
           repo: repo_name,
           label_name: URI.escape(old_label_name)
         )
