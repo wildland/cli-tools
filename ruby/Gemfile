@@ -9,3 +9,4 @@ end
 gem 'github_api'
 gem 'highline'
 gem 'ruby-progressbar'
+gem 'launchy'
