@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require 'github_api'
 require 'uri'
 require 'highline/import'
