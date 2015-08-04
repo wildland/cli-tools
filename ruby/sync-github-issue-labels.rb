@@ -22,14 +22,19 @@ verbose = agree("Verbose progress for all repos?")
 auto_create = agree("Automatically create labels?")
 auto_remove = agree("Automatically remove labels?")
 
+github = Github.new do |config|
+  config.basic_auth         = "#{username}:#{password}"
+  if agree("Do you use Two-Factor authentication?")
+    config.connection_options = { headers: {"X-GitHub-OTP" => ask('Two-Factor Code')} }
+  end
+end
+
 total_progressbar = ProgressBar.create(
   format: 'Total %E |%bᗧ%i| %p%% %t | Processed: %c repos out of %C',
   progress_mark: ' ',
   remainder_mark: '･',
   total: nil
 )
-
-github = Github.new(login: username, password: password)
 
 known_labels = github.issues.labels.list(user: org_or_github_user, repo: source_repo).map{|label| [label.name, label.color]}.to_h
 known_label_names = known_labels.keys.sort
