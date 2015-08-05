@@ -17,6 +17,13 @@ choose do |menu|
 end
 org_or_github_user = github_user.nil? ? org : github_user
 
+github = Github.new do |config|
+  config.basic_auth         = "#{username}:#{password}"
+  if agree("Do you use Two-Factor authentication (non-sms)?")
+    config.connection_options = { headers: {"X-GitHub-OTP" => ask('Two-Factor Code')} }
+  end
+end
+
 total_progressbar = ProgressBar.create(
   format: 'Total %E |%bᗧ%i| %p%% %t | Processed: %c repos out of %C',
   progress_mark: ' ',
@@ -24,7 +31,6 @@ total_progressbar = ProgressBar.create(
   total: nil
 )
 
-github = Github.new(login: username, password: password)
 if github_user.nil?
   repo_names = github.repos.list(org: org).map(&:name)
 else
