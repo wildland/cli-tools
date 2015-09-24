@@ -17,7 +17,7 @@ choose do |menu|
 end
 org_or_github_user = github_user.nil? ? org : github_user
 
-github = Github.new do |config|
+github = Github.new(auto_pagination: true) do |config|
   config.basic_auth         = "#{username}:#{password}"
   if agree("Do you use Two-Factor authentication (non-sms)?")
     config.connection_options = { headers: {"X-GitHub-OTP" => ask('Two-Factor Code')} }
