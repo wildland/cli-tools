@@ -22,7 +22,7 @@ verbose = agree("Verbose progress for all repos?")
 auto_create = agree("Automatically create labels?")
 auto_remove = agree("Automatically remove labels?")
 
-github = Github.new do |config|
+github = Github.new(auto_pagination: true) do |config|
   config.basic_auth         = "#{username}:#{password}"
   if agree("Do you use Two-Factor authentication?")
     config.connection_options = { headers: {"X-GitHub-OTP" => ask('Two-Factor Code')} }
